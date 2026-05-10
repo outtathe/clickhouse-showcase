@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: shop_mvp_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shop_mvp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  pg_data:
