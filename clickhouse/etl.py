@@ -14,10 +14,11 @@ pg = psycopg2.connect(
 
 ch = clickhouse_connect.get_client(
     host=os.getenv('CH_HOST'),
+    port=int(os.getenv('CH_PORT', '8123')),
     user=os.getenv('CH_USER'),
     password=os.getenv('CH_PASSWORD'),
-    secure=True,
-    database='shop_mvp',
+    secure=os.getenv('CH_SECURE', 'False').lower() == 'true',
+    database=os.getenv('CH_DB', 'shop_mvp'),
 )
 
 # --- users_dim ---
