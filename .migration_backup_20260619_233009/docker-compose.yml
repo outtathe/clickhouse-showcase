@@ -1,13 +1,3 @@
-# ClickHouse Data Engineering Showcase — локальный стек: PostgreSQL + Apache Airflow.
-# ClickHouse живёт отдельно (кластер в Яндекс Облаке), сюда не входит.
-#
-# Запуск:
-#   1) cp .env.example .env  &&  отредактировать пароли
-#   2) echo "AIRFLOW_UID=$(id -u)" >> .env      # чтобы логи/dags не были root-only
-#   3) docker compose up airflow-init           # один раз: миграции + admin-пользователь
-#   4) docker compose up -d                      # поднять весь стек
-#   5) UI:  http://localhost:8080  (admin / из .env)
-
 x-airflow-common: &airflow-common
   build:
     context: ./airflow
@@ -23,20 +13,11 @@ x-airflow-common: &airflow-common
     AIRFLOW_CONN_PG_SHOP: postgresql://${PG_USER}:${PG_PASSWORD}@postgres:5432/${PG_DB}
     # Где DAG ищет суточные партиции генератора
     DATA_RAW_DIR: /opt/airflow/data/raw
-    # --- ClickHouse (на той же VM; host.docker.internal -> хост-шлюз) ---
-    CH_HOST: ${CH_HOST:-host.docker.internal}
-    CH_PORT: ${CH_PORT:-8123}
-    CH_DB: ${CH_DB:-shop_mvp}
-    CH_USER: ${CH_USER:-default}
-    CH_PASSWORD: ${CH_PASSWORD:-}
-    CH_SECURE: ${CH_SECURE:-False}
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
-    - ./data:/opt/airflow/data          # партиции генератора (read-only)
-  extra_hosts:
-    - "host.docker.internal:host-gateway"   # чтобы контейнер достучался до CH на хосте VM
+    - ./data:/opt/airflow/data:ro          # партиции генератора (read-only)
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     postgres:
@@ -64,9 +45,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Один раз: миграции метабазы + admin-пользователь.
-  # ВАЖНО: команды идут через /entrypoint — он прописывает пользователя для
-  # произвольного UID (иначе airflow падает на getpwuid: uid not found).
   airflow-init:
     <<: *airflow-common
     container_name: showcase-airflow-init
@@ -74,8 +52,8 @@ services:
     command:
       - -c
       - |
-        /entrypoint airflow db migrate
-        /entrypoint airflow users create \
+        airflow db migrate
+        airflow users create \
           --username "${AIRFLOW_ADMIN_USER:-admin}" \
           --password "${AIRFLOW_ADMIN_PASSWORD:-admin}" \
           --firstname Admin --lastname User --role Admin \

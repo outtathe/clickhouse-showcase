@@ -1,0 +1,4 @@
+# Провайдер Postgres ставится БЕЗ пина версии — его версию задаёт
+# constraints-файл самого Airflow (для 2.10.5 это 6.0.0). Пин здесь
+# приводил к конфликту с constraints (ResolutionImpossible).
+apache-airflow-providers-postgres
