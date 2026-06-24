@@ -5,3 +5,6 @@ __pycache__/
 data/
 airflow/logs/
 airflow/plugins/__pycache__/
+.migration_backup_*/
+*.tar
+*.tgz
