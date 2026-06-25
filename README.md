@@ -31,7 +31,7 @@
 ---
 
 ## Архитектура
-
+<!-- 
 ```
                  ┌──────────────┐
                  │ generate.py  │  синтетика: сезонность, поведенческая
@@ -70,9 +70,9 @@
                  │   DataLens   │   4 вкладки: Обзор · Категории/воронка
                  │  (публичный) │   · Retention · Pipeline (data quality)
                  └──────────────┘
-```
+``` -->
 
-<!-- ![Схема пайплайна](misc/imgs/architecture_pipeline.png) -->
+![Схема пайплайна](misc/imgs/architecture_pipeline.png) 
 
 Ключевая идея — **разделение ответственности слоёв**: PostgreSQL держит нормализованную операционную модель с гарантиями целостности (PK/FK/CHECK) и карантином брака, а ClickHouse получает заранее денормализованные витрины, по которым аналитика идёт без единого JOIN.
 
@@ -256,7 +256,7 @@ python generate/generate.py \
 
 **Режим `--dirty`.** Контролируемая доля брака для демонстрации DQ-слоя: дубликаты `order_id` (ретраи источника), `NULL` в ключах, отрицательные количества, товары-сироты (несуществующий `product_id`), товары без категории, дубликаты событий. Каждый тип потом отлавливается и карантинится на промоушене в `core`.
 
-<!-- ![Сезонность GMV](misc/imgs/gmv_seasonality.png) -->
+![Сезонность GMV](misc/imgs/gmv_seasonality.png)
 
 ---
 
@@ -289,7 +289,7 @@ python generate/generate.py \
 - `dq.rejected_rows` — карантин: каждая отклонённая строка с причиной (`null_user_id` / `orphan_product` / `duplicate_pk` / …) и полным исходным payload в `JSONB` для разбора.
 - `dq.load_audit` — паспорт каждого прогона: сколько строк пришло в staging, доехало в core, ушло в карантин, ожидалось по manifest. Один `SELECT` показывает здоровье пайплайна — источник для вкладки Pipeline в дашборде.
 
-<!-- ![ERD PostgreSQL](misc/imgs/erd_postgres.png) -->
+![ERD PostgreSQL](misc/imgs/erd_postgres.png) 
 
 ---
 
@@ -326,7 +326,7 @@ check_clickhouse → load_dims → load_facts → load_events → write_etl_log
 - `load_events` — события за день из **CSV напрямую** в `events_fact`, минуя PostgreSQL (читаются чанками по 500k). Нет файла за день → `skip`.
 - `write_etl_log` — финальная метка `dag_complete` в `etl_log`. `trigger_rule=none_failed` — метка пишется даже когда `load_events` штатно скипнулся в пустой день (иначе журнал терял бы эти дни).
 
-<!-- ![Airflow DAG](misc/imgs/dag_airflow.png) -->
+![Airflow DAG](misc/imgs/dag_airflow.png)
 
 ---
 
