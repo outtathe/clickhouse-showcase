@@ -183,7 +183,7 @@ def pg_to_clickhouse():
             total += len(chunk)
         _log_etl(client, "load_events", ds, "events_fact", total, time.time() - t)
 
-    @task
+    @task(trigger_rule="none_failed")
     def write_etl_log(ds=None) -> None:
         """Финальная метка успешного прогона дня."""
         client = _ch()
